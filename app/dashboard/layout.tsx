@@ -12,6 +12,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const supabase = createClient()
   const [email, setEmail] = useState<string>('')
+  const [role, setRole] = useState<string>('')
 
   useEffect(() => {
     async function getUser() {
@@ -21,6 +22,15 @@ export default function DashboardLayout({
         return
       }
       setEmail(user.email ?? '')
+
+      // Ambil role dari database
+      const { data } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      if (data) setRole(data.role)
     }
     getUser()
   }, [router, supabase])
@@ -33,18 +43,22 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-800">Poster Sekolah</h1>
             <p className="text-xs text-gray-500">{email}</p>
           </div>
           <div className="flex items-center">
-            <a
-              href="/admin"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 mr-2"
-            >
-              Menu Admin
-            </a>
+            {/* MENU ADMIN HANYA MUNCUL JIKA ROLE NYA ADMIN */}
+            {role === 'admin' && (
+              <a
+                href="/admin"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 mr-2"
+              >
+                Menu Admin
+              </a>
+            )}
+            
             <button
               onClick={handleLogout}
               className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50"
@@ -54,7 +68,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-4xl mx-auto px-4 py-6">{children}</main>
     </div>
   )
 }
